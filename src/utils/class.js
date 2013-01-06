@@ -41,8 +41,8 @@ var Class = (function(){
 			
 			args = args.slice(1);
 		}
-		//继承
-		for(key in property){
+		//继承1.0
+		/*for(key in property){
 			var current_fn = property[key];
 			if(parent_property && typeof _class.prototype._super[key] == 'function'){
 				_class.prototype[key] = (function(k,v){
@@ -57,14 +57,19 @@ var Class = (function(){
 			}else{
 				_class.prototype[key] = property[key];
 			}
-		}
+		}*/
+		
+		add_methods(_class,property);
 		
 		//mixin
 		for ( var i = 0; i < args.length; i++) {
 			var arg = args[i];
 			if(typeof arg == 'object'){
 				for(key in arg){
-					_class.prototype[key] = arg[key];
+					//警告，这里放不下太多的重名方法，以第一次为准。
+					if(typeof _class.prototype[key] == 'undefined'){
+						_class.prototype[key] = arg[key];
+					}
 				}
 			}
 		}
@@ -72,6 +77,32 @@ var Class = (function(){
 		_class.prototype.constructor = _class;
 		
 		return _class;
+	}
+	
+	/**
+	 * @desc 给某个类添加方法.我在写Mars._的时候，发现需要根据条件重写_each方法，是后续写入，所以，把这个方法提出来
+	 * 
+	 */
+	function add_methods(target,properties){
+		for(var key in properties){
+			var property = properties[key];
+			add_method(target,key,property);
+		}
+	}
+	function add_method(_class,key,current_fn){
+		if(_class.prototype._super && typeof _class.prototype._super[key] == 'function'){
+			_class.prototype[key] = (function(k,v){
+				return function(){
+					var tmp  =this._super;
+					this._super = tmp[k];
+					var result = v.apply(this,arguments);
+					this._super = tmp;
+					return result;
+				};
+			})(key,current_fn);
+		}else{
+			_class.prototype[key] = current_fn;
+		}
 	}
 	
 	/**
@@ -154,6 +185,8 @@ var Class = (function(){
 		 *},EventUtil,ENumberable);
 		 */
 		create:create,
+		add_method:add_method,
+		add_methods:add_methods,
 		/**
 		 * 单例
 		 * @param {class}
