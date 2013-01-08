@@ -94,6 +94,8 @@ Mars.module("observer",(function(){
 		remove_observer:remove_observer,
 		bind:add_observer,
 		unbind:remove_observer,
-		trigger:notify
+		trigger:notify,
+		on:add_observer,
+		off:remove_observer
 	};
 })());

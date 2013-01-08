@@ -121,9 +121,13 @@ var Class = (function(){
 		return className._instance;
 	}
 	
-	function extend(class_name,static_property){
-		for(var key in static_property){
-			class_name[key] = static_property[key];
+	function extend(class_name){
+		var args = [].slice.call(arguments,1);
+		for(var property in args){
+			var static_property = args[property];
+			for(var key in static_property){
+				class_name[key] = static_property[key];
+			}
 		}
 		return class_name;
 	}
