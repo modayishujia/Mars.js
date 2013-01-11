@@ -1,5 +1,8 @@
+var Perm = (function(){
+	
 var Base = {};
 /*
+ * 很勉强的实现了一个伪的Rest支持。后续等有后台支持了再说。
  * Perm.set('todo.model',{
  * 	url:'http://baidu.com',
  * 	_attr:'id name age',
@@ -9,22 +12,29 @@ var Base = {};
   });
   var Todo = Perm.get("todo.model");
   var todo = new Todo({});
+  
+  before.
 */
 Base.model = Class.create({
 	__attr:{},
 	primary:'id',
+	url:null,
 	initialize:function(args){
 		Class.extend(this.__attr,args);
 	},
 	save:function(){
 		var type = Perm.REQUEST_TYPE.add;
+		var url = this._get_request_url("add");
 		if(this.__attr[primary]){
 			//更新。
 			type = Perm.REQUEST_TYPE.update;
+			url = this._get_request_url('update');
 		}
+		
 		var args = {
-				url:this.url,
+				url:url,
 				type:type,
+				data:this.__attr
 		};
 		
 		return $.ajax(args);
@@ -36,13 +46,13 @@ Base.model = Class.create({
 	get:function(){
 		
 		return $.ajax({
-			url:this.url,
+			url:this._get_request_url('get'),
 			data:this._get_request_id()
 		});
 	},
 	remove:function(){
 		var args = {
-				url:this.url,
+				url:this._get_request_url('remove'),
 				type:Perm.REQUEST_TYPE.remove,
 				data:this._get_request_id()
 		};
@@ -53,6 +63,7 @@ Base.model = Class.create({
 			attrs = this.__attr;
 		}
 		return $.ajax({
+			url:this._get_request_url("update"),
 			type:Perm.REQUEST_TYPE.update,
 			data:attrs
 		});
@@ -61,6 +72,12 @@ Base.model = Class.create({
 		var data = {};
 		data[this.primary] = this.__attr[this.primary];
 		return data;
+	},
+	_get_request_url:function(method){
+		if(!Perm.support_rest){
+			return this.url[method];
+		}
+		return this.url;
 	}
 },Mars.module("observer"),Mars.module("enumberable"));
 
@@ -71,6 +88,7 @@ Base.model_static = {
 	},
 	fetch:function(condition,args){
 		args = this._fix_args(args);
+		args.data = condition;
 		return $.ajax(args);
 	},
 	find:function(condition,args){
@@ -78,6 +96,9 @@ Base.model_static = {
 	},
 	_fix_args:function(args){
 		var url = this.prototype.url;
+		if(Perm.support_rest){
+			url = url['get'];
+		}
 		var source = {type:Perm.REQUEST_TYPE.get,url:url};
 		Mars._(args).each(function(item,key){
 			source[key] = item;
@@ -85,13 +106,65 @@ Base.model_static = {
 		return source;
 	}
 };
+
+/**
+ * var User = Perm.get('say.model');
+ * User.fetch({name:'say','method':'save'})
+ * 	.done()
+ *  .error()
+ *  .always();
+ */
 Base.controller = Class.create({
 	
 },Mars.module("observer"));
 
+Base.service = Class.create({
+	
+},Mars.module("observer"));
+
+//Base.service = Class.create({},Mars.module);
 Base.view = Class.create({
-	initialize:function(){},
-	_init_all_selector:function(){}
+	d:{},
+	//[items/click/todo_handler,m/a.say/click/handler]
+	_e:[],
+	set:function(key,value){
+		if(typeof key == 'object'){
+			Mars._(key).each(function(selector,index){
+				this.set(index,selector);
+			},this);
+		}else{
+			this.d[key] = typeof value == 'string'?$(value):value;
+		}
+		
+		return this;
+	},
+	get:function(key){
+		return this.d[key];
+	},
+	initialize:function(){
+	},
+	add_events:function(rules){
+		Mars._(rules).each(this.add,this);
+	},
+	remove:function(rule){
+		this._toggle_event(rule,true);
+	},
+	_toggle_event:function(rule,off){
+		var method = off?'off':'on';
+		var arr = item.split('/');
+		if(arr.length==3){
+			this.d[arr[0]][method](arr[1],Mars.proxy(this[arr[2]],this));
+		}else{
+			this.d[arr[0]][method](arr[1],arr[2],Mars.proxy(this[arr[2]],this));
+		}
+	},
+	/**
+	 *target/event/handler
+	 *parent/delegate/event/handler
+	 */
+	add:function(rule){
+		this._toggle_event(rule);
+	}
 },Mars.module("observer"));
 
 /**
@@ -140,11 +213,11 @@ var Perm = {
 			this.run();
 		},
 		//存储
-		_views:{},
-		__views:{},
-		_controllers:{},
-		__controllers:{},
-		_models:{},
+		_view:{},
+		__view:{},
+		_controller:{},
+		__controller:{},
+		_model:{},
 		
 		_is_running:false,
 		
@@ -152,14 +225,14 @@ var Perm = {
 		rules:[],
 		hash_rules:{},
 		_hash_support:false,
-//		support_rest:false,
+		support_rest:false,
 		//默认执行的函数。
 		_default:[],
 		REQUEST_TYPE:{
-			'remove':'delete',
+			'remove':'post',
 			'get':'get',
 			'update':'post',
-			'add':'put',
+			'add':'post',
 		},
 		//设置新的对象
 		set:function(name,property,module){
@@ -181,22 +254,27 @@ var Perm = {
 			}
 			
 			//model不执行实例化。
-			if(class_base =='controller' ||(class_base == 'view' && this._is_running)){
+			if(class_base =='controller' || class_base == 'service' ||(class_base == 'view' && this._is_running)){
 				this['__'+class_base][class_name] = Class.instance(_class);
 			}
 			
-			return this;
+			return this.get(name,true);
 		},
 		//ready后，初始化所有view
 		_instance_all:function(){
-			Mars._(this._views).each(function(key,value){
-				this.__views[key] = Class.instance(value);
+			Mars._(this._view).each(function(value,key){
+				this.__view[key] = Class.instance(value);
 			},this);
 		},
 		//获取某个实例，如果model,那就是对象。
-		get:function(name){
+		/**
+		 * @param name{string} -名称
+		 * @param object{boolean} -是否返回对象/实例
+		 */
+		get:function(name,object){
 			var names = name.split("."),class_name=names[0],class_base=names[1];
-			var prefix = class_base!='model'?'__':"_";
+			
+			var prefix = (class_base!='model' && !object)?'__':"_";
 			
 			return this[prefix+class_base][class_name];
 		},
@@ -283,7 +361,7 @@ var Perm = {
 		rest_support:function(){
 			this.support_rest = true;
 			this.REQUEST_TYPE.remove='delete';
-			this.REQUEST_TYPE.add='put';
+			this.REQUEST_TYPE.update = 'put';
 		},
 		/**
 		 * 需要插件支持。默认不开放。
@@ -362,6 +440,9 @@ var Perm = {
 			}
 		}
 };
+
+return Perm;
+})();
 
 //主要运行函数
 (function(){

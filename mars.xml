@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="compress" basedir="./" name="YUICompressor">
+	<property name="version" value="0.9" />
+    <!-- 项目的app文件夹的路径 -->
+    <property name="path" value="./" />
+    <!-- 部署的输出路径 -->
+    <property name="packed" value="./build" />
+    <!-- 部署前资源路径 -->
+    <property name="source" value="./src" />
+    <!-- YUI Compressor -->
+    <property name="yuicompressor" value="./ant/yuicompressor-2.4.7.jar" />
+	<property name="clourecompressor" value="./ant/compiler.jar" />
+ 
+    <!-- =================================
+        target: concat 拼接（合并）文件
+    ================================== -->
+    <target name="concat" depends="" description="concat code">
+    	<echo message="Clean Old*.min.js in this Folder" />
+    	<delete verbose="false" failonerror="true">
+    		 <fileset dir="${packed}" includes="mars.${version}.js" />
+    		 <fileset dir="${packed}" includes="mars.${version}.min.js" />
+    		 <fileset dir="${packed}" includes="mars.${version}.minify.js" />
+        </delete>
+        <echo message="Concat Code Files Begin!" />
+        <!-- 需要注意这里的拼接顺序 &js -->
+        <concat destfile="${packed}/mars.${version}.js" encoding="utf-8" fixlastline="on">
+            <fileset dir="${source}" includes="utils/class.js" />
+        	<fileset dir="${source}" includes="utils/modules.js" />
+            <fileset dir="${source}" includes="Mars.js" />
+            <fileset dir="${source}" includes="modules/enumberable.js" />
+        	<fileset dir="${source}" includes="modules/observer.js" />
+        </concat>
+        <echo message="Concat Code Files Finished!" />
+ 
+    </target> 
+ 
+     <!-- =================================
+        target: yui compress 压缩 js && css
+    ================================= -->
+    <target name="compress" depends="concat"  description="compress code">
+        <echo message="Compress Code Begin!" />
+        <apply executable="java" parallel="false" failonerror="true"  dest="${packed}">
+            <fileset dir="${packed}" includes="*.js"/>
+            <arg line="-jar"/>
+            <arg path="${yuicompressor}" />
+            <arg line="--charset utf-8" />
+            <arg value="--type"/>
+            <arg value="js" />
+            <arg value="-o" />
+            <targetfile/>
+            <mapper type="glob" from="*.js" to="*.min.js" />
+        </apply>
+        <echo message="Compress Code Finished" />
+    </target>
+	
+	<target name="closure-compress" depends="concat"  description="compress code">
+			<apply executable="java" parallel="false" failonerror="true"  dest="${packed}">
+	        	<fileset dir="${packed}" includes="*.js"/>
+	            <arg line="-jar"/>
+	            <arg path="${clourecompressor}"/>
+	            <arg line="--charset utf-8"/>
+	            <arg value="--warning_level"/>
+	            <arg value="QUIET"/>
+	            <arg value="--js"/>
+	            <srcfile/>
+	            <arg value="--js_output_file"/>
+	            <targetfile/>
+	        	 <mapper type="glob" from="*.js" to="*.minify.js" />
+	        </apply>
+			<echo message="Compress Code Finished" />
+	    </target>
+</project>

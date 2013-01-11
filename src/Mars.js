@@ -4,11 +4,9 @@
   * MIT Licensed
   */
 var Mars = {modules:{}};
-
-
-Class.extend(Mars,function(){
+Class.extend(Mars,(function(){
 	//获取module,设置module
-	function module(module_name,module_property){
+	function _module(module_name,module_property){
 		if(typeof module_property == 'undefined'){
 			return Mars.modules[module_name];
 		}
@@ -133,12 +131,13 @@ Class.extend(Mars,function(){
 		
 		return _proxy;
 	}
+	
 	return {
 		/**
 		 * Mars.m("enumberable");
 		 * Mars.m("enumberable",{...});
 		 */
-		module:module,
+		module:_module,
 		/**
 		 * Mars._([1,2,3,4]).each(function(item,index)){
 		 * 
@@ -167,7 +166,7 @@ Class.extend(Mars,function(){
 		proxy:proxy,
 		
 	};
-}());
+})());
 
 //@import utils/class.js
 //@import utils/modules.js
