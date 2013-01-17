@@ -215,6 +215,8 @@ var Perm = {
 		//存储
 		_view:{},
 		__view:{},
+		_service:{},
+		__service:{},
 		_controller:{},
 		__controller:{},
 		_model:{},
@@ -333,8 +335,8 @@ var Perm = {
 		 *say.controller/load_data;
 		 */
 		_call:function(call_rule){
-			var args = call_rule.split('/'),_class=this.get(args[0]),_caller = args[1];
-			return _class[_caller](Array.prototype.slice.call(arguments,1));
+			var args = call_rule.split('/');
+			this.get(args[0])[args[1]].apply(this.get(args[0]),[].slice.call(arguments,1));
 		},
 		//执行某个默认函数。
 		run:function(rule){
@@ -343,6 +345,9 @@ var Perm = {
 					this._call.apply(this,arguments);
 					return;
 				}else{
+					Mars._(this.rules).each(function(v){
+						this._run_rule(v);
+					},this);
 					Mars._(this._default).each(function(v){
 						this._call.apply(this,v);
 					},this);

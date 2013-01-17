@@ -3,11 +3,14 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Insert title here</title>
-<script type="text/javascript" src="../src/utils/class.js"></script>
-<script type="text/javascript" src="../src/Mars.js"></script>
-<script type="text/javascript" src="../src/utils/modules.js"></script>
-<script type="text/javascript" src="../src/modules/enumberable.js"></script>
-<script type="text/javascript" src="../src/modules/observer.js"></script>
+<!-- <script type="text/javascript" src="../src/utils/class.js"></script> -->
+<!-- <script type="text/javascript" src="../src/Mars.js"></script> -->
+<!-- <script type="text/javascript" src="../src/utils/modules.js"></script> -->
+<!-- <script type="text/javascript" src="../src/modules/enumberable.js"></script> -->
+<!-- <script type="text/javascript" src="../src/modules/observer.js"></script> -->
+<script type="text/javascript" src="jq.js"></script>
+<script type="text/javascript" src="../build/mars.0.9.min.js"></script>
+<script type="text/javascript" src="../src/plugins/Perm.jquery.js"></script>
 <style type="text/css">
 	.wangdong{background-color:#ff00ff}
 </style>
@@ -33,6 +36,20 @@
 // 	});
 	
 // }
+
+Perm.set("s.service",{
+	load_data:function(){
+		//alert(1);
+		this.notify('load',[1,2,3]);
+	}
+});
+Perm.set('v.view',{
+	show:function(data){
+		alert(data);
+	}
+});
+Perm.add_rule("s.service/load/v.view/show");
+Perm.run("s.service/load_data");
 </script>
 </head>
 <body>
