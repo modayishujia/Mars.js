@@ -163,8 +163,7 @@ Class.extend(Mars,(function(){
 		random_string:random_string,
 		//深度复制
 		deep_copy:deep_copy,
-		proxy:proxy,
-		
+		proxy:proxy
 	};
 })());
 

@@ -1,4 +1,4 @@
-var Perm = (function(){
+Class.extend(Mars,(function(){
 	
 var Base = {};
 /*
@@ -23,11 +23,11 @@ Base.model = Class.create({
 		Class.extend(this.__attr,args);
 	},
 	save:function(){
-		var type = Perm.REQUEST_TYPE.add;
+		var type = Mars.REQUEST_TYPE.add;
 		var url = this._get_request_url("add");
 		if(this.__attr[primary]){
 			//更新。
-			type = Perm.REQUEST_TYPE.update;
+			type = Mars.REQUEST_TYPE.update;
 			url = this._get_request_url('update');
 		}
 		
@@ -53,7 +53,7 @@ Base.model = Class.create({
 	remove:function(){
 		var args = {
 				url:this._get_request_url('remove'),
-				type:Perm.REQUEST_TYPE.remove,
+				type:Mars.REQUEST_TYPE.remove,
 				data:this._get_request_id()
 		};
 		return $.ajax(args);
@@ -64,7 +64,7 @@ Base.model = Class.create({
 		}
 		return $.ajax({
 			url:this._get_request_url("update"),
-			type:Perm.REQUEST_TYPE.update,
+			type:Mars.REQUEST_TYPE.update,
 			data:attrs
 		});
 	},
@@ -74,7 +74,7 @@ Base.model = Class.create({
 		return data;
 	},
 	_get_request_url:function(method){
-		if(!Perm.support_rest){
+		if(!Mars.support_rest){
 			return this.url[method];
 		}
 		return this.url;
@@ -96,10 +96,10 @@ Base.model_static = {
 	},
 	_fix_args:function(args){
 		var url = this.prototype.url;
-		if(Perm.support_rest){
+		if(Mars.support_rest){
 			url = url['get'];
 		}
-		var source = {type:Perm.REQUEST_TYPE.get,url:url};
+		var source = {type:Mars.REQUEST_TYPE.get,url:url};
 		Mars._(args).each(function(item,key){
 			source[key] = item;
 		});
@@ -114,9 +114,9 @@ Base.model_static = {
  *  .error()
  *  .always();
  */
-Base.controller = Class.create({
-	
-},Mars.module("observer"));
+//Base.controller = Class.create({
+//	
+//},Mars.module("observer"));
 
 Base.service = Class.create({
 	
@@ -127,7 +127,14 @@ Base.view = Class.create({
 	d:{},
 	//[items/click/todo_handler,m/a.say/click/handler]
 	_e:[],
-	set:function(key,value){
+	/**
+	 * 自动set,get
+	 */
+	_:function(key,value){
+		if(typeof value == 'undefined' && typeof key == 'string'){
+			return this.d[key];
+		}
+		
 		if(typeof key == 'object'){
 			Mars._(key).each(function(selector,index){
 				this.set(index,selector);
@@ -137,11 +144,6 @@ Base.view = Class.create({
 		}
 		
 		return this;
-	},
-	get:function(key){
-		return this.d[key];
-	},
-	initialize:function(){
 	},
 	add_events:function(rules){
 		Mars._(rules).each(this.add,this);
@@ -153,9 +155,9 @@ Base.view = Class.create({
 		var method = off?'off':'on';
 		var arr = item.split('/');
 		if(arr.length==3){
-			this.d[arr[0]][method](arr[1],Mars.proxy(this[arr[2]],this));
+			this._(arr[0])[method](arr[1],Mars.proxy(this[arr[2]],this));
 		}else{
-			this.d[arr[0]][method](arr[1],arr[2],Mars.proxy(this[arr[2]],this));
+			this._[arr[0]][method](arr[1],arr[2],Mars.proxy(this[arr[2]],this));
 		}
 	},
 	/**
@@ -204,7 +206,7 @@ Base.view = Class.create({
  * 	}
  * });
  */
-var Perm = {
+var _mars_msv = {
 		initialize:function(){
 			this._is_running=true;
 			//初始化所有view
@@ -217,8 +219,8 @@ var Perm = {
 		__view:{},
 		_service:{},
 		__service:{},
-		_controller:{},
-		__controller:{},
+//		_controller:{},
+//		__controller:{},
 		_model:{},
 		
 		_is_running:false,
@@ -234,7 +236,7 @@ var Perm = {
 			'remove':'post',
 			'get':'get',
 			'update':'post',
-			'add':'post',
+			'add':'post'
 		},
 		//设置新的对象
 		set:function(name,property,module){
@@ -300,7 +302,7 @@ var Perm = {
 			if(this._is_running){
 				this._run_rule(rule,true);
 			}else{
-				throw 'error[can not remove observer before running Perm.destory_rule]';
+				throw 'error[can not remove observer before running Mars.destory_rule]';
 			}
 		},
 		/**
@@ -324,7 +326,7 @@ var Perm = {
 				var method = destory?'remove_observer':'add_observer';
 				event_target[method](arr[1],Mars.proxy(recive_target[arr[3]],recive_target));
 			}else{
-				throw 'error[run before dom ready:Perm._run_rule.]';
+				throw 'error[run before dom ready:Mars._run_rule.]';
 			}
 			
 			return this;
@@ -356,7 +358,7 @@ var Perm = {
 				if(rule){
 					this._default.push(arguments);
 				}else{
-					throw 'error[undefined rule to run Perm.run]';
+					throw 'error[undefined rule to run Mars.run]';
 				}
 			}
 		},
@@ -367,91 +369,15 @@ var Perm = {
 			this.support_rest = true;
 			this.REQUEST_TYPE.remove='delete';
 			this.REQUEST_TYPE.update = 'put';
-		},
-		/**
-		 * 需要插件支持。默认不开放。
-		 * 如果需要开放，那么需要Perm.hash_support();
-		 * 如果hash_support(popstate),那么就坚挺了popstate.
-		 * @returns
-		 */
-		hash_support:function(popstate){
-			
-			try{
-				if(popstate){
-					this._hash_support = 'popstate';
-					window.addEventListener("popstate",Mars.proxy(this._hash_changed,this));
-				}else{
-					this._hash_support = 'hash';
-					$(window).on('hashchange',Mars.proxy(this._hash_changed,this));
-				}
-			}catch(e){
-				throw e+'[hash_support error]';
-			}
-		},
-		_hash_changed:function(e){
-
-			var is_match = false;
-			Mars._(this.hash_rules).each(function(handler,key){
-				if(key == 'default') throw 'continue';
-				
-				var pattern=new RegExp(key,'i'),
-					result = pattern.exec(window.location.href),
-					params = result.slice(1);
-				if(params){
-					is_match = true;
-					this.hash_rules[key](params);
-					throw 'break';
-				}
-			},this);
-			
-			//如果没有匹配。。那么就默认。
-			if(!is_match){
-				this.hash_rules['default']();
-			}
-		},
-		//添加默认的hash规则。
-		add_hash_rule:function(rule,handler){
-			if(typeof rule == 'object'){
-				this.add_hash_rules(rule);
-				return;
-			}
-			
-			this.hash_rules[rule] = handler;
-		},
-		//批量添加hash_rule
-		add_hash_rules:function(rules){
-			
-			Mars._(rules).each(function(handler,rule){
-				this.add_hash_rule(rule,handler);
-			},this);
-			
-			return this;
-		},
-		/**
-		 *{
-		 *'\w[1-9]\?:function(params){
-		 *	Perm.run('todo.controller/load_data',date,cate);
-		 *},
-		 *'default':function(){
-		 *	window.location.hash='home';
-		 *}
-		 */
-		_run_hash_rule:function(rule){
-			var lambda = this.hash_rules[rule];
-			if(lambda){
-				this.hash_rules[rule]();
-			}else{
-				throw 'error[not defined-'+rule+'-for hash]';
-			}
 		}
 };
 
-return Perm;
-})();
+return _mars_msv;
+})());
 
 //主要运行函数
 (function(){
 	$(document).ready(function(){
-		Perm.initialize();
+		Mars.initialize();
 	});
 })();
