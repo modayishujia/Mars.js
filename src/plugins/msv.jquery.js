@@ -321,9 +321,19 @@ var _mars_msv = {
 				//如果没有处理函数，自动用后续配对的来处理。
 				if(arr.length == 3){
 					var notice_type = arr[1].replace(':','_');
-					arr.push(notice_type+'_handler');
+					if(typeof recive_target[notice_type] == 'function'){
+						arr.push(notice_type);
+					}else{
+						arr.push(notice_type+'_handler');
+					}
 				}
+				
+				if(typeof recive_target[arr[3]] != 'function'){
+					throw 'undefined handler_function+['+arr[3]+'] at '+arr[2];
+				}
+				
 				var method = destory?'remove_observer':'add_observer';
+				//判断是否为_handler
 				event_target[method](arr[1],Mars.proxy(recive_target[arr[3]],recive_target));
 			}else{
 				throw 'error[run before dom ready:Mars._run_rule.]';

@@ -142,7 +142,10 @@ Class.extend(Mars,(function(){
 		 * Mars._([1,2,3,4]).each(function(item,index)){
 		 * 
 		 * },context);
-		 * Mars._({key:v,k:value}).each(function(item,key)){
+		 * var hash = Mars._({key:v,k:value});
+		 * hash.find_index(1)
+		 * hash.remove(2);
+		 * hash.each(function(item,key)){
 		 * 	
 		 * },context);
 	

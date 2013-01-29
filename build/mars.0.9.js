@@ -360,7 +360,10 @@ Class.extend(Mars,(function(){
 		 * Mars._([1,2,3,4]).each(function(item,index)){
 		 * 
 		 * },context);
-		 * Mars._({key:v,k:value}).each(function(item,key)){
+		 * var hash = Mars._({key:v,k:value});
+		 * hash.find_index(1)
+		 * hash.remove(2);
+		 * hash.each(function(item,key)){
 		 * 	
 		 * },context);
 	
@@ -410,6 +413,7 @@ Mars.module("enumberable",(function(){
 		});
 		return r;
 	}
+	
 	return{
 		each:each,
 		collect:collect,
@@ -654,7 +658,14 @@ Base.view = Class.create({
 	d:{},
 	//[items/click/todo_handler,m/a.say/click/handler]
 	_e:[],
-	set:function(key,value){
+	/**
+	 * 自动set,get
+	 */
+	_:function(key,value){
+		if(typeof value == 'undefined' && typeof key == 'string'){
+			return this.d[key];
+		}
+		
 		if(typeof key == 'object'){
 			Mars._(key).each(function(selector,index){
 				this.set(index,selector);
@@ -664,11 +675,6 @@ Base.view = Class.create({
 		}
 		
 		return this;
-	},
-	get:function(key){
-		return this.d[key];
-	},
-	initialize:function(){
 	},
 	add_events:function(rules){
 		Mars._(rules).each(this.add,this);
@@ -680,9 +686,9 @@ Base.view = Class.create({
 		var method = off?'off':'on';
 		var arr = item.split('/');
 		if(arr.length==3){
-			this.d[arr[0]][method](arr[1],Mars.proxy(this[arr[2]],this));
+			this._(arr[0])[method](arr[1],Mars.proxy(this[arr[2]],this));
 		}else{
-			this.d[arr[0]][method](arr[1],arr[2],Mars.proxy(this[arr[2]],this));
+			this._[arr[0]][method](arr[1],arr[2],Mars.proxy(this[arr[2]],this));
 		}
 	},
 	/**
@@ -846,9 +852,19 @@ var _mars_msv = {
 				//如果没有处理函数，自动用后续配对的来处理。
 				if(arr.length == 3){
 					var notice_type = arr[1].replace(':','_');
-					arr.push(notice_type+'_handler');
+					if(typeof recive_target[notice_type] == 'function'){
+						arr.push(notice_type);
+					}else{
+						arr.push(notice_type+'_handler');
+					}
 				}
+				
+				if(typeof recive_target[arr[3]] != 'function'){
+					throw 'undefined handler_function+['+arr[3]+'] at '+arr[2];
+				}
+				
 				var method = destory?'remove_observer':'add_observer';
+				//判断是否为_handler
 				event_target[method](arr[1],Mars.proxy(recive_target[arr[3]],recive_target));
 			}else{
 				throw 'error[run before dom ready:Mars._run_rule.]';

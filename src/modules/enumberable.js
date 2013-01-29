@@ -18,6 +18,7 @@ Mars.module("enumberable",(function(){
 		});
 		return r;
 	}
+	
 	return{
 		each:each,
 		collect:collect,
