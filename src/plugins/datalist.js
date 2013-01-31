@@ -10,7 +10,7 @@
 	 * 
 	 * 
 	 */
-	var _property = {
+	var datalist_property = {
 			initialize:function(args){
 				if(this.data('data-list')){
 					return this;
@@ -96,10 +96,14 @@
 	};
 	
 	$.fn.Datalist = function(args){
-		for(var key in _property){
-			this[key] = _property[key];
+		for(var key in datalist_property){
+			this[key] = datalist_property[key];
 		}
 		this.initialize(args);
 		return this;
+	};
+	
+	var page_property = {
+			
 	};
 })();

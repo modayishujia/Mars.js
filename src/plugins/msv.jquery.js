@@ -124,15 +124,13 @@ Base.service = Class.create({
 
 //Base.service = Class.create({},Mars.module);
 Base.view = Class.create({
-	d:{},
 	//[items/click/todo_handler,m/a.say/click/handler]
-	_e:[],
 	/**
 	 * 自动set,get
 	 */
 	_:function(key,value){
 		if(typeof value == 'undefined' && typeof key == 'string'){
-			return this.d[key];
+			return this[key];
 		}
 		
 		if(typeof key == 'object'){
@@ -142,8 +140,16 @@ Base.view = Class.create({
 		}else{
 			this.d[key] = typeof value == 'string'?$(value):value;
 		}
-		
 		return this;
+	},
+	set:function(key,value){
+		if(typeof value == 'string'){
+			value = $(value);
+		}
+		if(typeof this[key] !='undefined'){
+			throw 'already defined key in '+this.__class_name;
+		}
+		this[key] = value;
 	},
 	add_events:function(rules){
 		Mars._(rules).each(this.add,this);
@@ -240,6 +246,8 @@ var _mars_msv = {
 		},
 		//设置新的对象
 		set:function(name,property,module){
+			property.__class_name = name;
+			
 			var modules = [].slice.call(arguments,2)||[],
 				names = name.split("."),class_name=names[0],class_base=names[1],
 				_class = Class.create(property,Base[class_base],modules);
