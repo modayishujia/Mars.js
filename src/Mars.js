@@ -111,9 +111,9 @@ Class.extend(Mars,(function(){
 	function deep_copy(source){
 		if(typeof source == 'object'){
 			if(source instanceof Array){
-				return _deep_copy_object(source);
-			}else{
 				return _deep_copy_array(source);
+			}else{
+				return _deep_copy_object(source);
 			}
 		}
 		return source;
@@ -132,6 +132,10 @@ Class.extend(Mars,(function(){
 		return _proxy;
 	}
 	
+	function _reg(str){
+		str = str.replace(/^\\[\.\(\)\\\/\?\+\-\*]/g,"\$1");
+		return new RegExp(str);
+	}
 	return {
 		/**
 		 * Mars.m("enumberable");
@@ -166,7 +170,8 @@ Class.extend(Mars,(function(){
 		random_string:random_string,
 		//深度复制
 		deep_copy:deep_copy,
-		proxy:proxy
+		proxy:proxy,
+		reg:_reg
 	};
 })());
 

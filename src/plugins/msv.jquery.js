@@ -138,7 +138,7 @@ Base.view = Class.create({
 				this.set(index,selector);
 			},this);
 		}else{
-			this.d[key] = typeof value == 'string'?$(value):value;
+			this.set(key,value);
 		}
 		return this;
 	},
@@ -293,7 +293,7 @@ var _mars_msv = {
 		//普通rule.相互监听的规则。
 		add_rules:function(rules){
 			Mars._(rules).each(function(rule){
-				this._add_rule(rule);
+				this.add_rule(rule);
 			},this);
 			
 			return this;

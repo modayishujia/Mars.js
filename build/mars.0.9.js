@@ -329,9 +329,9 @@ Class.extend(Mars,(function(){
 	function deep_copy(source){
 		if(typeof source == 'object'){
 			if(source instanceof Array){
-				return _deep_copy_object(source);
-			}else{
 				return _deep_copy_array(source);
+			}else{
+				return _deep_copy_object(source);
 			}
 		}
 		return source;
@@ -350,6 +350,10 @@ Class.extend(Mars,(function(){
 		return _proxy;
 	}
 	
+	function _reg(str){
+		str = str.replace(/^\\[\.\(\)\\\/\?\+\-\*]/g,"\$1");
+		return new RegExp(str);
+	}
 	return {
 		/**
 		 * Mars.m("enumberable");
@@ -384,7 +388,8 @@ Class.extend(Mars,(function(){
 		random_string:random_string,
 		//深度复制
 		deep_copy:deep_copy,
-		proxy:proxy
+		proxy:proxy,
+		reg:_reg
 	};
 })());
 
@@ -655,15 +660,13 @@ Base.service = Class.create({
 
 //Base.service = Class.create({},Mars.module);
 Base.view = Class.create({
-	d:{},
 	//[items/click/todo_handler,m/a.say/click/handler]
-	_e:[],
 	/**
 	 * 自动set,get
 	 */
 	_:function(key,value){
 		if(typeof value == 'undefined' && typeof key == 'string'){
-			return this.d[key];
+			return this[key];
 		}
 		
 		if(typeof key == 'object'){
@@ -671,10 +674,18 @@ Base.view = Class.create({
 				this.set(index,selector);
 			},this);
 		}else{
-			this.d[key] = typeof value == 'string'?$(value):value;
+			this.set(key,value);
 		}
-		
 		return this;
+	},
+	set:function(key,value){
+		if(typeof value == 'string'){
+			value = $(value);
+		}
+		if(typeof this[key] !='undefined'){
+			throw 'already defined key in '+this.__class_name;
+		}
+		this[key] = value;
 	},
 	add_events:function(rules){
 		Mars._(rules).each(this.add,this);
@@ -771,6 +782,8 @@ var _mars_msv = {
 		},
 		//设置新的对象
 		set:function(name,property,module){
+			property.__class_name = name;
+			
 			var modules = [].slice.call(arguments,2)||[],
 				names = name.split("."),class_name=names[0],class_base=names[1],
 				_class = Class.create(property,Base[class_base],modules);
@@ -816,7 +829,7 @@ var _mars_msv = {
 		//普通rule.相互监听的规则。
 		add_rules:function(rules){
 			Mars._(rules).each(function(rule){
-				this._add_rule(rule);
+				this.add_rule(rule);
 			},this);
 			
 			return this;

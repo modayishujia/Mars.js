@@ -65,7 +65,7 @@
 	            <arg value="--js"/>
 	            <srcfile/>
 				<arg value="--create_source_map"/>
-				<arg value="./mars.jquery.source.map" />
+				<arg value="./build/mars.jquery.source.map" />
 				<arg value="--source_map_format=V3"/>
 	            <arg value="--js_output_file"/>
 	            <targetfile/>
