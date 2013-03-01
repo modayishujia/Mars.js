@@ -299,13 +299,13 @@ Class.extend(Mars,(function(){
 		for(var key in source){
 			var item =source[key];
 			if(typeof item =='object'){
-				if(typeof item.slice=='function'){
+				if(typeof item.slice!='function'){
 					target[key] = arguments.callee(item);	
 				}else{
 					target[key] = _deep_copy_array(item);
 				}
 			}else{
-				target[key] = source[key];
+				target[key] = item;
 			}
 		}
 		return target;
@@ -313,15 +313,15 @@ Class.extend(Mars,(function(){
 	function _deep_copy_array(source){
 		var target = [];
 		for(var i=0;i<source.length;i++){
-			var v = source[i];
-			if(typeof v == 'object'){
+			var item = source[i];
+			if(typeof item == 'object'){
 				if(typeof item.slice == 'function'){
 					target[i] = arguments.callee(item);
 				}else{
-					target[i] = _deep_copy_array(item);
+					target[i] = _deep_copy_object(item);
 				}
 			}else{
-				target[i] = v;
+				target[i] = item;
 			}	
 		}
 		return target;
